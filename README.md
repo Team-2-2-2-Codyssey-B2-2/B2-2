@@ -11,7 +11,6 @@
 | [`src/string_utils.py`](src/string_utils.py) | `to_snake_case`, `truncate` | snake_case 변환, 최대 길이 말줄임 | NiceTry3675 |
 | [`src/dict_utils.py`](src/dict_utils.py) | `flatten_dict`, `deep_merge` | 중첩 딕셔너리 평탄화, 재귀적 병합 | ewisewjd |
 
-
 ### 검증 방법
 
 ```bash
