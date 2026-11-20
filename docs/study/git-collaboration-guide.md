@@ -207,59 +207,47 @@ git remote -v          # origin이 나오면 연결 성공
 
 Git은 **빈 폴더를 추적하지 못합니다.** 폴더를 만들어도 안에 파일이 없으면 커밋에 포함되지 않아서 GitHub에 폴더가 보이지 않습니다. 폴더 안에 `README.md`나 관례적으로 쓰는 빈 파일 `.gitkeep`을 넣어 두세요.
 
-2-5. Ruleset을 이용한 main 브랜치 보호 (미션 필수)
+### 2-5. Ruleset을 이용한 main 브랜치 보호 (미션 필수)
 
 미션 요구사항은 세 가지입니다.
 
-main 브랜치에 직접 push 금지
-
-PR을 통한 병합만 허용
-
-최소 1명 이상의 승인(Approve) 필요
+- main 브랜치에 직접 push 금지
+- PR을 통한 병합만 허용
+- 최소 1명 이상의 승인(Approve) 필요
 
 GitHub에서는 Branch Protection Rule 또는 Ruleset을 이용해 브랜치를 보호할 수 있습니다.
 
 우리 팀 저장소는 Ruleset 방식을 사용합니다.
 
-Ruleset 설정 확인 경로
+**Ruleset 설정 확인 경로**
 
-저장소 메인 페이지에서 Settings 선택
+1. 저장소 메인 페이지에서 Settings 선택
+2. 왼쪽 메뉴에서 Rules 선택
+3. Rulesets 선택
+4. `protect-main` Ruleset 확인
 
-왼쪽 메뉴에서 Rules 선택
+**주요 설정 확인 사항**
 
-Rulesets 선택
+- 대상 브랜치(Target branches): `main`
+- PR을 통한 변경만 허용
+- PR 병합 전 최소 1명 이상의 승인 요구
+- 강제 푸시 제한
+- Ruleset의 bypass 대상 확인
 
-protect-main Ruleset 확인
+우리 팀의 `protect-main` Ruleset은 bypass 대상이 비어 있습니다. 따라서 별도로 우회 권한을 부여받은 계정이 없는 현재 설정에서는 관리자도 Ruleset을 우회할 수 없습니다.
 
-주요 설정 확인 사항
+**주의:** Ruleset과 Classic Branch Protection Rule은 별개의 설정입니다. 이미 Ruleset으로 브랜치를 보호하고 있다면 같은 목적의 Classic Rule을 추가로 만들지 말고, 기존 Ruleset의 설정을 확인하고 관리하는 것이 좋습니다.
 
-대상 브랜치(Target branches): main
-
-PR을 통한 변경만 허용
-
-PR 병합 전 최소 1명 이상의 승인 요구
-
-강제 푸시 제한
-
-Ruleset의 bypass 대상 확인
-
-우리 팀의 protect-main Ruleset은 bypass 대상이 비어 있습니다. 따라서 별도로 우회 권한을 부여받은 계정이 없는 현재 설정에서는 관리자도 Ruleset을 우회할 수 없습니다.
-
-주의: Ruleset과 Classic Branch Protection Rule은 별개의 설정입니다. 이미 Ruleset으로 브랜치를 보호하고 있다면 같은 목적의 Classic Rule을 추가로 만들지 말고, 기존 Ruleset의 설정을 확인하고 관리하는 것이 좋습니다.
-
-설정 확인 방법
+**설정 확인 방법**
 
 테스트 PR을 생성하고 다음 사항을 확인합니다.
 
-승인 전에는 병합할 수 없는지
+- 승인 전에는 병합할 수 없는지
+- 승인 후 병합할 수 있는지
+- main에 직접 push할 수 없는지
+- 강제 푸시가 제한되는지
 
-승인 후 병합할 수 있는지
-
-main에 직접 push할 수 없는지
-
-강제 푸시가 제한되는지
-
-설정 화면과 테스트 결과를 캡처해 SUBMISSION.md에 증빙으로 첨부하면 좋습니다.
+설정 화면과 테스트 결과를 캡처해 `SUBMISSION.md`에 증빙으로 첨부하면 좋습니다.
 
 ### 2-6. 승인 규칙이 팀 운영에 주는 영향
 
@@ -1336,8 +1324,10 @@ git commit -m "chore: add base folder structure and doc skeletons"
 git push
 ```
 
-- [ ] 1-4. GitHub에서 **Branch Protection**을 설정한다(2-5장): `Require a pull request before merging` + `Require approvals` 1명 이상 + `Do not allow bypassing the above settings`.
-- [ ] 1-5. 보호가 제대로 걸렸는지 확인한다.
+- [ ] `protect-main` Ruleset이 Active 상태인지 확인
+- [ ] 대상 브랜치가 `main`인지 확인
+- [ ] PR 병합 전 최소 1명 이상의 승인이 필요한지 확인
+- [ ] Bypass list에 불필요한 우회 대상이 없는지 확인
 
 ```bash
 git commit --allow-empty -m "chore: verify main branch protection"
@@ -1623,7 +1613,17 @@ git commit -m "chore: stop tracking .env and ignore it"
 
 | # | 질문 | 답 |
 | --- | --- | --- |
-| 1 | Branch Protection을 켤는데도 저장소 관리자가 main에 바로 push할 수 있는 경우는? | 기본적으로 admin에게 규칙이 적용되지 않아 `Do not allow bypassing the above settings`를 안 켰을 때(2-5장) |
+| 1 | Q. 관리자(admin)인데도 main 브랜치 보호 규칙을 우회할 수 없는 이유는 무엇인가요?
+
+A. 브랜치 보호 설정의 우회 권한은 설정 방식에 따라 다릅니다.
+
+Classic Branch Protection Rule: Do not allow bypassing the above settings 옵션을 활성화하지 않은 경우 관리자 등이 규칙을 우회할 수 있습니다.
+
+Ruleset: Bypass list에 등록된 사용자나 팀만 규칙을 우회할 수 있습니다.
+
+우리 팀 저장소의 protect-main Ruleset은 Bypass list가 비어 있으므로 관리자도 해당 규칙을 우회할 수 없습니다.
+
+
 | 2 | `git commit --amend` 후 커밋 해시는? | 바뀜다(새 커밋으로 대체, 7-1장) |
 | 3 | PR로 병합된 커밋을 `git revert`할 때 필요한 옵션은? | `-m 1`(부모 지정, 7-3장) |
 | 4 | `git stash`는 새로 만든 파일도 보관하나? | 아니오, `-u`가 필요(7-4장) |
