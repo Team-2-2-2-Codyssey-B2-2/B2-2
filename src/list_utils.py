@@ -3,6 +3,13 @@
 사용 예시는 각 함수의 docstring(doctest)에 있으며, 아래 명령으로 검증할 수 있습니다.
 
     python3 -m doctest src/list_utils.py -v
+
+지원 범위와 한계:
+    - chunk: Sequence(list, tuple, str 등)만 지원합니다. 내부에서 len()과 슬라이싱을
+      사용하므로 제너레이터나 파일 객체를 넣으면 TypeError가 발생합니다.
+      이런 입력은 list()로 변환한 뒤 사용하세요. 예: chunk(list(gen), 2)
+    - unique: 모든 Iterable을 지원하지만, 요소가 해시 가능해야 합니다.
+      list나 dict처럼 해시할 수 없는 요소가 있으면 TypeError가 발생합니다.
 """
 
 from collections.abc import Hashable, Iterable, Sequence
