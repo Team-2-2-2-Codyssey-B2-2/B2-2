@@ -17,7 +17,7 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 | 시나리오 | 명령 | 담당 | 상태 |
 |---|---|---|---|
 | 1. amend | `git commit --amend` | tlswltjq | ✅ |
-| 2. reset --soft | `git reset --soft HEAD~1` | TBD | ⬜ |
+| 2. reset --soft | `git reset --soft HEAD~1` | NiceTry3675 | ✅ |
 | 3. revert | `git revert <commit>` | TBD | ⬜ |
 | 4. stash | `git stash` / `git stash pop` | TBD | ⬜ |
 
@@ -68,24 +68,60 @@ git reflog -3
 ## 시나리오 2: reset --soft (로컬 커밋 취소 + 변경 유지)
 
 ### 참여자
-- <name> (역할)
+- NiceTry3675 (수행, 기록)
 
 ### 상황
-- 
+- 브랜치 `feature/conflict-log-reset-soft`에서 `docs/conflict-resolution.md`에 충돌 기록 #1을 작성하고 커밋(`6465624`)함 (Issue #14)
+- 커밋 직후 템플릿 필수 항목인 **"배운 점(Learnings)" 섹션을 빠뜨린 것**을 발견
+- 아직 push 전이라 원격에는 이 커밋이 없는 상태
+- "섹션 추가" 커밋을 하나 더 쌓으면 미완성 커밋이 히스토리에 남으므로, 커밋을 취소하고 내용을 보완해 **하나의 완성된 커밋**으로 다시 만들기로 함
 
 ### 시도한 명령/절차
 ```bash
-git log --oneline -2
-git reset --soft HEAD~1
-git status
+$ git log --oneline -2
+6465624 docs: add conflict record #1 (README same-hunk conflict between PR #8 and #10)
+c82fb14 Merge pull request #8 from Team-2-2-2-Codyssey-B2-2/feature/string-utils
+
+$ git reset --soft HEAD~1
+
+$ git log --oneline -2
+c82fb14 Merge pull request #8 from Team-2-2-2-Codyssey-B2-2/feature/string-utils
+8624041 Merge branch 'main' into feature/string-utils
+
+$ git status -s
+M  docs/conflict-resolution.md        # 첫 글자 M = 스테이징 영역에 그대로 남아 있음
+
+$ git diff --cached --stat
+ docs/conflict-resolution.md | 58 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
+
+# "배운 점" 섹션 추가 후 다시 커밋
+$ git add docs/conflict-resolution.md
+$ git commit -m "docs: add conflict record #1 (README same-hunk conflict between PR #8 and #10)"
+
+$ git log --oneline -2
+a945f27 docs: add conflict record #1 (README same-hunk conflict between PR #8 and #10)
+c82fb14 Merge pull request #8 from Team-2-2-2-Codyssey-B2-2/feature/string-utils
+
+$ git reflog -4
+a945f27 HEAD@{0}: commit: docs: add conflict record #1 (README same-hunk conflict between PR #8 and #10)
+c82fb14 HEAD@{1}: reset: moving to HEAD~1
+6465624 HEAD@{2}: commit: docs: add conflict record #1 (README same-hunk conflict between PR #8 and #10)
+c82fb14 HEAD@{3}: checkout: moving from main to feature/conflict-log-reset-soft
 ```
 
 ### 결과
-- 
-- 주의할 점: 
+- `reset --soft HEAD~1`은 **브랜치 포인터만** `6465624` → `c82fb14`로 한 칸 되돌림. 작성한 58줄은 스테이징 상태(`M `)로 그대로 남아 있어 다시 `add`할 필요 없이 보완만 하면 됐음
+- 보완 후 새 커밋 `a945f27`이 생김. 같은 메시지지만 내용(트리)이 달라 해시도 다름
+- 취소된 `6465624`는 어떤 브랜치도 가리키지 않지만 `reflog`(`HEAD@{2}`)에 남아 있어, 필요하면 `git reset --hard 6465624`로 복구 가능
+- 주의할 점
+  - push 전 **개인 feature 브랜치에서만** 사용. 이미 push한 커밋을 reset하면 원격보다 뒤처져 force push가 필요해지고, 같은 브랜치를 받은 팀원의 히스토리와 갈라짐 → 공유된 커밋은 `revert`(시나리오 3) 사용
+  - `HEAD~1`의 `~1`은 "현재 커밋의 첫 번째 부모". 머지 커밋 위에서 쓸 때는 어느 쪽으로 이동하는지 `git log --graph`로 먼저 확인
 
 ### 왜 이 방법을 선택했는가(Why)
-- `--soft` / `--mixed` / `--hard` 중 `--soft`를 고른 이유
+- **`--soft` vs `--mixed` vs `--hard`**: 변경 내용을 지우면 안 되므로 `--hard`는 제외. `--mixed`(기본값)도 파일은 남지만 스테이징이 풀려 다시 `git add`해야 함. 커밋만 취소하고 **스테이징까지 그대로 유지**하는 `--soft`가 "조금만 보완해서 다시 커밋"하는 상황에 가장 적합
+- **amend와 비교**: 이번처럼 마지막 커밋 1개만 보완하는 경우 `git add` 후 `git commit --amend`로도 같은 결과를 얻을 수 있음. 다만 `reset --soft`는 `HEAD~2`, `HEAD~3`처럼 **여러 커밋을 한 번에 풀어 하나로 다시 묶을 때**도 같은 방식으로 쓸 수 있어 원리를 익히는 목적에 맞음
+- **새 커밋 추가와 비교**: "docs: add missing learnings" 커밋을 추가하면 미완성 커밋이 히스토리에 남아 리뷰어가 두 커밋을 합쳐서 봐야 함. push 전이므로 히스토리를 정리하는 쪽을 선택
 
 ---
 
