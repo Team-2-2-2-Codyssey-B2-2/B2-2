@@ -16,7 +16,7 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 
 | 시나리오 | 명령 | 담당 | 상태 |
 |---|---|---|---|
-| 1. amend | `git commit --amend` | TBD | ⬜ |
+| 1. amend | `git commit --amend` | tlswltjq | ✅ |
 | 2. reset --soft | `git reset --soft HEAD~1` | TBD | ⬜ |
 | 3. revert | `git revert <commit>` | TBD | ⬜ |
 | 4. stash | `git stash` / `git stash pop` | TBD | ⬜ |
@@ -26,24 +26,42 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 ## 시나리오 1: amend (최근 커밋 메시지 수정)
 
 ### 참여자
-- <name> (역할)
+- tlswltjq (수행, 기록)
 
 ### 상황
-- 문제가 무엇이었는지(재현 가능한 설명)
+- 브랜치 `feature/tlswltjq-list-utils`에서 `src/list_utils.py`를 추가하고 커밋 메시지를 `add list utils`로 남김 (PR #10, Issue #9)
+- 팀 컨벤션(`<type>: <변경 내용>`)에 어긋나고, 어떤 함수를 추가했는지 드러나지 않는 메시지
+- 아직 push 전이라 원격에는 이 커밋이 없는 상태
 
 ### 시도한 명령/절차
 ```bash
 git log --oneline -1
-git commit --amend -m "<수정한 메시지>"
+# a978ba0 add list utils
+
+git commit --amend -m "feat: 리스트 유틸 함수(chunk, unique) 추가"
+
 git log --oneline -1
+# 7b10085 feat: 리스트 유틸 함수(chunk, unique) 추가
+
+git reflog -3
+# 7b10085 HEAD@{0}: commit (amend): feat: 리스트 유틸 함수(chunk, unique) 추가
+# a978ba0 HEAD@{1}: commit: add list utils
+# 6081252 HEAD@{2}: checkout: moving from main to feature/tlswltjq-list-utils
 ```
 
 ### 결과
-- 무엇이 어떻게 해결됐는지
-- 주의할 점(원격 히스토리/협업 영향)
+- 파일 내용은 그대로이고 메시지만 바뀐 새 커밋 `7b10085`가 생기고, 브랜치 포인터가 그쪽으로 이동함
+- 커밋 해시는 메시지까지 포함해 계산되므로 `a978ba0` → `7b10085`로 바뀜(같은 커밋 수정이 아니라 교체)
+- 이전 커밋 `a978ba0`은 어떤 브랜치도 가리키지 않지만 `git reflog`에 남아 있어 `git reset --hard a978ba0`으로 되돌릴 수 있음
+- 주의할 점
+  - amend는 히스토리를 바꾸므로 **push 전, 개인 feature 브랜치에서만** 사용
+  - 이미 push한 커밋을 amend하면 원격과 해시가 달라져 force push가 필요하고, 같은 브랜치를 받은 팀원 히스토리가 꼬임
+  - 마지막 커밋만 고칠 수 있음(더 이전 커밋은 `git rebase -i`)
 
 ### 왜 이 방법을 선택했는가(Why)
-- 
+- push 전이고 마지막 커밋 1개의 메시지만 잘못됐으므로, 커밋을 하나 더 쌓지 않고 바로 고칠 수 있는 amend가 가장 간단함
+- `reset --soft HEAD~1`도 가능하지만 커밋을 취소한 뒤 다시 커밋해야 해서 단계가 많음
+- `revert`는 이미 공유된 커밋을 되돌리는 방법이라 메시지 수정에는 맞지 않음
 
 ---
 
