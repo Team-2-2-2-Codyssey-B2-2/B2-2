@@ -43,7 +43,7 @@ Nov 18, 2026 · @안흥
 
 ## 1. Git 기초 개념
 
-Git은 파일의 변경 이력을 "저장 지점(커밋)"마다 기록해 두는 도구이고, GitHub는 그 저장소를 인터넷에 올려 여러 사람이 함께 쓰게 해 주는 서비스입니다. 혼동하기 쉽지만 \*\*Git은 도구(내 컴퓨터에서 동작), GitHub는 서비스(웹 사이트)\*\*입니다. Issue, Pull Request, Branch Protection은 Git이 아니라 GitHub의 기능입니다.
+Git은 파일의 변경 이력을 "저장 지점(커밋)"마다 기록해 두는 도구이고, GitHub는 그 저장소를 인터넷에 올려 여러 사람이 함께 쓰게 해 주는 서비스입니다. 혼동하기 쉽지만 **Git은 도구(내 컴퓨터에서 동작), GitHub는 서비스(웹 사이트)**입니다. Issue, Pull Request, Branch Protection은 Git이 아니라 GitHub의 기능입니다.
 
 ### 1-1. 처음 한 번만 할 설정
 
@@ -180,7 +180,7 @@ GitHub 공식 문서("About protected branches")에 따르면 **무료 플랜(Gi
 
 ### 2-3. 처음 만들 때 순서
 
-1. 저장소를 만들 때 \*\*"Add a README file"\*\*을 체크하면 초기 커밋이 생겨 main 브랜치가 바로 생깁니다.
+1. 저장소를 만들 때 **"Add a README file"**을 체크하면 초기 커밋이 생겨 main 브랜치가 바로 생깁니다.
 2. 팀원 전원을 초대하고, 각자 초대를 **수락**합니다.
 3. 기본 폴더(`docs/`, `src/`, 선택에 따라 `team/`)를 만든 다음 **Branch Protection을 켭니다**. 보호를 먼저 켜면 세팅 커밋도 PR을 거쳐야 해서 진행이 느려집니다.
 4. 팀원 각자 `git clone`으로 내 컴퓨터에 내려받습니다.
@@ -207,27 +207,59 @@ git remote -v          # origin이 나오면 연결 성공
 
 Git은 **빈 폴더를 추적하지 못합니다.** 폴더를 만들어도 안에 파일이 없으면 커밋에 포함되지 않아서 GitHub에 폴더가 보이지 않습니다. 폴더 안에 `README.md`나 관례적으로 쓰는 빈 파일 `.gitkeep`을 넣어 두세요.
 
-### 2-5. Branch Protection 설정 (미션 필수)
+2-5. Ruleset을 이용한 main 브랜치 보호 (미션 필수)
 
-미션 요구사항은 세 가지입니다. ① main에 직접 push 금지, ② PR을 통한 병합만 허용, ③ 최소 1명 승인(approve) 필요. GitHub 공식 문서("Managing a branch protection rule")에서 확인한 클릭 경로와 옵션 이름입니다.
+미션 요구사항은 세 가지입니다.
 
-1. 저장소 메인 페이지 → **Settings** 탭
-2. 왼쪽 메뉴 **Code, planning, and automation** 아래 **Branches**
-3. **Branch protection rules** 아래 **Add classic branch protection rule**
-4. **Branch name pattern** 칸에 `main` 입력
-5. **Require a pull request before merging** 체크 → 하위 옵션 **Require approvals** 체크, 숫자를 **1** 이상으로
-6. **Do not allow bypassing the above settings** 체크 권장
-7. **Allow force pushes**는 체크하지 않음
-8. **Create** 또는 **Save changes**
+main 브랜치에 직접 push 금지
 
-이 중 두 가지를 꼭 기억하세요.
+PR을 통한 병합만 허용
 
-- **관리자(admin) 예외**: GitHub 공식 문서에 따르면 "기본적으로 보호 규칙의 제한은 admin 권한이 있는 사람에게 적용되지 않습니다." 저장소를 만든 팀원(admin)이 실수로 main에 바로 push하지 않게 하려면 **Do not allow bypassing the above settings**를 켜야 합니다.
-- **강제 푸시(force push)**: 기본적으로 차단되어 있습니다(공식 문서). 미션의 "합의 없는 강제 푸시 금지" 제약과 맞다는 뷰이니 그대로 두세요.
+최소 1명 이상의 승인(Approve) 필요
 
-이밖에 **Require conversation resolution before merging**(리뷰 대화를 해결 처리해야 병합 가능) 옵션이 있으면 켜 두면 "리뷰 반영 증빙"이 남아 좋습니다(미션 필수는 아닙니다).
+GitHub에서는 Branch Protection Rule 또는 Ruleset을 이용해 브랜치를 보호할 수 있습니다.
 
-**설정 확인법**: 테스트 PR을 하나 열어 승인이 없을 때 Merge 버튼이 막히는지 봅니다. 스크린샷(설정 화면 + 막힌 결과)을 남겨 SUBMISSION.md에 링크하면 보호 규칙 설정 증빙이 됩니다. 평가에서 요구하는 증빙 목록에는 없지만, 서류에서 설정을 확인해야 하는 경우를 대비한 안전망입니다.
+우리 팀 저장소는 Ruleset 방식을 사용합니다.
+
+Ruleset 설정 확인 경로
+
+저장소 메인 페이지에서 Settings 선택
+
+왼쪽 메뉴에서 Rules 선택
+
+Rulesets 선택
+
+protect-main Ruleset 확인
+
+주요 설정 확인 사항
+
+대상 브랜치(Target branches): main
+
+PR을 통한 변경만 허용
+
+PR 병합 전 최소 1명 이상의 승인 요구
+
+강제 푸시 제한
+
+Ruleset의 bypass 대상 확인
+
+우리 팀의 protect-main Ruleset은 bypass 대상이 비어 있습니다. 따라서 별도로 우회 권한을 부여받은 계정이 없는 현재 설정에서는 관리자도 Ruleset을 우회할 수 없습니다.
+
+주의: Ruleset과 Classic Branch Protection Rule은 별개의 설정입니다. 이미 Ruleset으로 브랜치를 보호하고 있다면 같은 목적의 Classic Rule을 추가로 만들지 말고, 기존 Ruleset의 설정을 확인하고 관리하는 것이 좋습니다.
+
+설정 확인 방법
+
+테스트 PR을 생성하고 다음 사항을 확인합니다.
+
+승인 전에는 병합할 수 없는지
+
+승인 후 병합할 수 있는지
+
+main에 직접 push할 수 없는지
+
+강제 푸시가 제한되는지
+
+설정 화면과 테스트 결과를 캡처해 SUBMISSION.md에 증빙으로 첨부하면 좋습니다.
 
 ### 2-6. 승인 규칙이 팀 운영에 주는 영향
 
@@ -565,7 +597,7 @@ if __name__ == "__main__":
 
 ## 6. 충돌(Conflict) 이해와 해결 실습
 
-충돌은 오류가 아니라 \*\*"사람이 결정해야 할 일을 Git이 알려 주는 신호"\*\*입니다. 먼저 왜 생기는지 이해하고, 그다음 팀에서 직접 만들어 해결하고 기록을 남깁니다.
+충돌은 오류가 아니라 **"사람이 결정해야 할 일을 Git이 알려 주는 신호"**입니다. 먼저 왜 생기는지 이해하고, 그다음 팀에서 직접 만들어 해결하고 기록을 남깁니다.
 
 ### 6-1. 왜 충돌이 생기는가
 
@@ -687,7 +719,7 @@ git commit -m "fix: resolve util.py delete/modify conflict by keeping the edited
 
 ## 7. 되돌리기 4종: amend, reset --soft, revert, stash
 
-미션의 트러블슈팅 실습 4가지입니다. 핵심 판단 기준은 단 하나, \*\*"그 커밋을 이미 팀원들이 볼 수 있는 원격(GitHub)에 올렸는가"\*\*입니다. 올리기 전이면 내 로컬에서 마음껏 고치면 되고, 올린 뒤에는 히스토리를 고치지 말고 "되돌리는 새 커밋"을 추가해야 합니다.
+미션의 트러블슈팅 실습 4가지입니다. 핵심 판단 기준은 단 하나, **"그 커밋을 이미 팀원들이 볼 수 있는 원격(GitHub)에 올렸는가"**입니다. 올리기 전이면 내 로컬에서 마음껏 고치면 되고, 올린 뒤에는 히스토리를 고치지 말고 "되돌리는 새 커밋"을 추가해야 합니다.
 
 ### 7-0. 한 눈에 비교
 
@@ -753,7 +785,7 @@ A  g.txt                                      # 변경은 스테이징 상태로
 
 `HEAD~1`은 "현재에서 한 커밋 앞"입니다. `HEAD~2`면 두 커밋 앞입니다. `--hard`는 커밋하지 않은 작업도 함께 지우므로 가장 조심해야 합니다.
 
-**실수로 `--hard`를 쎨을 때 구조하는 법**: 커밋된 내용이었다면 `git reflog`에 기록이 남아 있어 복구할 수 있습니다(직접 확인).
+**실수로 `--hard`를 썼을 때 구조하는 법**: 커밋된 내용이었다면 `git reflog`에 기록이 남아 있어 복구할 수 있습니다(직접 확인).
 
 ```bash
 git reflog -3                 # 사라진 커밋의 해시를 찾는다 (예: 72f69dd HEAD@{1}: commit: feat: add g.txt)
@@ -784,7 +816,7 @@ $ git log --oneline -4
 $ git push        # 정상 push 성공
 ```
 
-기록이 모두 남는 것이 장점입니다. 누가 언제 무엇을 또 되돌렸는지 팀이 알 수 있습니다. `git revert --no-edit`는 자동 메시지를 그대로 쓰는 옵션이고, 옳을 수정하려면 옵션 없이 실행해 에디터에서 바꾸면 됩니다.
+기록이 모두 남는 것이 장점입니다. 누가 언제 무엇을 또 되돌렸는지 팀이 알 수 있습니다. `git revert --no-edit`는 자동 메시지를 그대로 쓰는 옵션이고, 메시지를 수정하려면 옵션 없이 실행해 에디터에서 바꾸면 됩니다.
 
 **중요: PR로 병합된 커밋(merge commit)을 revert할 때는 `-m 1`이 필요합니다.** 병합 커밋은 부모가 둘이라 어느 쪽을 기준으로 되돌릴지 지정해야 하기 때문입니다. 직접 확인한 결과입니다.
 
@@ -921,7 +953,7 @@ git switch feature/kim-oops     # 3) 커밋이 살아 있는 새 브랜치로 �
 
 ## 8. 협업 문서 3종과 SUBMISSION.md 작성법
 
-미션은 코드보다 **기록**을 봅니다. 문서 4개를 빈틈없이 채우는 것이 평가의 큰 부분입니다. 아래 템플릿은 미션 원문의 예시 구조를 따르되 초보자가 무엇을 써야 할지 막막하지 않도록 예시 내용을 채워 둔 것입니다. **예시 문구는 팀 내용으로 바꾸어 쓰세요.**
+미션은 코드보다 **기록**을 봅니다. 문서 4개를 빈틈없이 채우는 것이 평가의 큰 부분입니다. 아래에서는 협업 문서 3종의 작성 요령과 SUBMISSION.md 템플릿을 안내합니다. 예시 문구가 있다면 팀의 실제 내용으로 바꾸어 쓰세요.
 
 ### 8-1. 문서 나눠 쓰는 법 (PR 한 개도 함께 채우기)
 
@@ -937,135 +969,56 @@ git switch feature/kim-oops     # 3) 커밋이 살아 있는 새 브랜치로 �
 
 같은 파일(CONTRIBUTING.md)을 여러 명이 동시에 고치면 자연스럽게 충돌이 나서, 6장 충돌 실습의 재료가 되기도 합니다. 다만 처음부터 서로 다른 절(섹션)을 맡도록 작업을 나눠야, 이를 실습이 아닌 실제 협업으로 만들 수 있습니다.
 
-### 8-2. docs/CONTRIBUTING.md 템플릿
 
-미션 최소 포함 항목(브랜치 네이밍, 커밋 컨벤션, PR 작성 규칙, 코드 리뷰 규칙, 충돌 대응 흐름) 모두 들어 있습니다.
 
-```markdown
-# Contributing Guide
+### 8-2. docs/CONTRIBUTING.md 작성
 
-## 1. 브랜치 전략 (GitHub Flow)
-- `main`: 항상 깨지지 않는 상태. 직접 push 금지, PR로만 병합.
-- `feature/*`: 작업 단위 브랜치. Issue 1개 = 브랜치 1개 = PR 1개.
-- 우리 팀이 GitHub Flow를 선택한 이유 (3줄 이내):
-  1. main과 feature/* 두 종류뿐이라 초보자 팀도 바로 이해할 수 있다.
-  2. 작업마다 브랜치를 나눠 main이 깨지지 않는다.
-  3. PR마다 리뷰 기록이 남아 실수를 줄이고 배울 수 있다.
+팀의 협업 규칙을 정리하는 문서입니다.
 
-## 2. 브랜치 네이밍 규칙
-- 형식: `feature/<영문소문자 이름>-<작업 요약>`
-- 예: `feature/kim-math-utils`, `feature/park-contributing`
-- 영문 소문자와 하이픈만 사용한다. 공백·한글·특수문자 금지.
+- [CONTRIBUTING.md](../CONTRIBUTING.md)
 
-## 3. 커밋 메시지 컨벤션
-- 형식: `<type>: <subject>`
-- type: feat / fix / docs / refactor / test / chore
-- 금지 예: `update`, `fix`, `temp`, `wip`, `final`, `bug fix`, `edit file`
-- 좋은 예: `docs: add branch naming rules to CONTRIBUTING`
-- 한 커밋에는 한 가지 의도만 담는다.
+다음 항목이 포함되어 있는지 확인합니다.
 
-## 4. Issue 규칙
-- 코드를 쓰기 전에 Issue를 먼저 만든다. 목적과 완료 조건을 적는다.
-- 담당자(Assignee)를 지정한다.
+- 브랜치 전략과 브랜치 네이밍 규칙
+- 커밋 메시지 컨벤션
+- Issue 및 PR 작성 규칙
+- 코드 리뷰 규칙
+- 충돌 발생 시 대응 흐름
 
-## 5. PR 작성 규칙
-- 제목: `feat: <작업 요약>`
-- 본문 필수 항목: 연결 이슈(`Closes #번호`), 변경 사항(What), 변경 이유(Why), 테스트/검증(How)
-- 병합 조건: 다른 팀원 1명 이상의 Approve. 병합 방식은 Create a merge commit.
-- 병합 후 feature 브랜치는 삭제한다.
+팀원들이 함께 사용할 규칙이므로 실제 팀의 합의 내용을 작성해야 합니다.
 
-## 6. 코드 리뷰 규칙
-- "LGTM/좋아요"만 남기는 것 금지.
-- 최소 1개는 특정 라인·파일을 근거로 한 질문 / 대안 / 리스크 지적 / 개선 제안을 남긴다.
-- 작성자는 답글 또는 수정 커밋으로 반응하고, 해결된 대화는 Resolve한다.
-- 리뷰 요청을 받으면 (팀 기한 예: 24시간) 이내에 남긴다.
+### 8-3. docs/conflict-resolution.md 작성
 
-## 7. 충돌 발생 시 대응 흐름
-1. 충돌을 발견한 사람이 단톡방에 공유한다 (어느 파일, 누구와 충돌인지).
-2. 충돌을 겪은 본인이 로컬에서 `git merge origin/main`으로 해결한다. rebase·강제 push 금지.
-3. 상대방과 어느 쪽을 쓸지 의논한다.
-4. 해결 후 `docs/conflict-resolution.md`에 기록하고 PR에 연결한다.
+Git 충돌이 발생했을 때 상황과 해결 과정을 기록하는 문서입니다.
 
-## 8. 안정성 규칙
-- main 히스토리 재작성 금지.
-- 팀 합의 없는 force push / rebase 금지.
-```
+- [conflict-resolution.md](../conflict-resolution.md)
 
-### 8-3. docs/conflict-resolution.md 작성 예시
+충돌을 해결한 뒤 다음 내용을 기록합니다.
 
-아래는 이 문서에서 직접 재현했던 충돌(6장)를 미션 템플릿에 맞춰 채운 예시입니다. 이름·브랜치·커밋은 여러분 것으로 바꾸세요.
+- 충돌에 참여한 사람과 작업 브랜치
+- 충돌이 발생한 파일과 원인
+- 충돌 해결에 사용한 명령어와 절차
+- 최종 해결 방법과 결과
+- 충돌을 통해 배운 점
 
-````markdown
-# Conflict Resolution Log
+실제로 발생한 충돌을 바탕으로 작성하고, 예시가 아닌 본인 팀의 기록을 남깁니다.
 
-## 충돌 기록 #1
-### 참여자
-- 작성자: 김철수
-- 상대: 이영희
+### 8-4. docs/troubleshooting-log.md 작성
 
-### 상황(What happened)
-- `feature/kim-team`이 먼저 main에 병합된 뒤, `feature/lee-team`을 main에 병합하려고 하자
-  `team.txt`에서 충돌이 발생했다. 두 사람이 같은 줄(`TEAM: unknown`)을 다르게 고쳐서다.
+Git 실습 중 발생한 문제와 해결 과정을 기록하는 문서입니다.
 
-### 충돌 내용(Conflict markers)
-```txt
-<<<<<<< HEAD
-TEAM: Alpha
-=======
-TEAM: Beta
->>>>>>> feature/lee-team
-```
+- [troubleshooting-log.md](../troubleshooting-log.md)
 
-### 해결 과정(How)
-- 전략: keep both (두 이름을 합침). 이유: 두 제안 모두 팀원 합의 전 임시안이었고 합치는 편이 효율적이었다.
-- 실제 수행한 명령:
-  1. `git merge feature/lee-team` → CONFLICT 확인, `git status`에 `UU team.txt`
-  2. team.txt에서 마커 3종을 지우고 `TEAM: Alpha-Beta`로 수정
-  3. `git add team.txt`
-  4. `git commit -m "fix: resolve team name conflict by combining Alpha and Beta"`
-  5. `grep -rn "<<<<<<<" .` → 결과 없음 확인
+각 실습 기록에는 다음 내용을 포함합니다.
 
-### 결과(Outcome)
-- 커밋 `6069350`, PR #12
+- 실습 시나리오와 참여자
+- 발생한 상황과 문제
+- 사용한 명령어 및 실행 절차
+- 실행 결과와 주의사항
+- 해당 방법을 선택한 이유
 
-### 배운 점(Learnings)
-- 같은 파일의 같은 줄은 작업 시작 전에 누가 맡을지 정하고, 작업 시작 전 `git pull`로 최신을 받는다.
-````
+미션에서 요구하는 `commit --amend`, `reset --soft`, `revert`, `stash` 등의 실습 결과를 실제 터미널 기록과 함께 작성합니다.
 
-참고로 위 예시의 커밋 `6069350`은 저희가 샌드박스에서 생성한 해시입니다. 본인 팀의 실제 커밋 해시와 PR 번호로 반드시 교체하세요.
-
-### 8-4. docs/troubleshooting-log.md 작성 예시
-
-미션은 "상황/절차/결과/주의점"이 들어가야 재현 가능한 기록이라고 합니다. 템플릿의 "참여자"에 **이름과 역할**을 적습니다.
-
-````markdown
-# Troubleshooting Log
-
-## 시나리오: amend
-### 참여자
-- 김철수 (실습 담당), 이영희 (진행 확인 및 기록 리뷰)
-
-### 상황
-- 최근 커밋 메시지에 오타(`updte f`)가 있었다. 아직 push하지 않았다.
-
-### 시도한 명령/절차
-```text
-$ git log --oneline -1
-3f860d3 updte f
-$ git commit --amend -m "feat: add f.txt with initial value"
-$ git log --oneline -1
-29fc697 feat: add f.txt with initial value
-```
-
-### 결과
-- 메시지가 수정되고 커밋 해시가 `3f860d3`에서 `29fc697`로 바뀌었다.
-- 주의점: push 이후에 amend하면 원격과 히스토리가 갈라져 push가 `non-fast-forward`로 거부된다. 강제 푸시는 팀 합의 없이 금지.
-
-### 왜 이 방법을 선택했는가(Why)
-- 아직 push 전의 최근 1개 커밋이라 히스토리를 고쳐도 팀에 영향이 없어서 amend를 사용했다.
-````
-
-나머지 시나리오 3개(reset --soft, revert, stash)도 같은 틀으로 추가합니다. 7-6장의 명령 블록과 터미널 출력을 그대로 넣으면 됩니다.
 
 ### 8-5. SUBMISSION.md (제출물 인덱스) 템플릿
 
@@ -1188,7 +1141,7 @@ python -m doctest -v src/kim_math_utils.py   # docstring의 사용 예시가 맞
 
 ### 9-5. 팀원별 최소 기준 체크리스트 (본인 기준)
 
-아래 실제 항목은 미션 원문에 그대로 나오는 \*\*팀원 각자 기준(전원 충족)\*\*입니다. 자기 이름으로 한 벌씩 복사해 확인하세요.
+아래 실제 항목은 미션 원문에 그대로 나오는 **팀원 각자 기준(전원 충족)**입니다. 자기 이름으로 한 벌씩 복사해 확인하세요.
 
 - [ ] Issue를 만들어 각 작업에 연결했다 (PR 2개 이상 → Issue 2개 이상)
 - [ ] **PR 2개 이상을 생성하고 병합**했다
@@ -1733,7 +1686,7 @@ git commit -m "chore: stop tracking .env and ignore it"
 - **GitHub 화면의 버튼·메뉴 이름 일부**: Compare & pull request, Reviewers, Delete branch, Resolve conversation, Require conversation resolution before merging, Organization 생성·People 초대 메뉴는 공식 문서로 직접 확인하지 못했습니다. 자주 쓰이는 이름이지만 화면이 다르면 비슷한 이름을 찾아보세요.
 - **보호 규칙이 걸린 뒤 실제 push 거부 문구**: 샌드박스는 GitHub가 아니라서 직접 만들어 보지 못했습니다. 11장 단계 1의 테스트로 팀이 직접 확인하세요.
 - **`.github/pull_request_template.md` 자동 적용**, **Merge 버튼 3종(Create a merge commit / Squash and merge / Rebase and merge) 설명**, **인증 방식(Q7)**: 일반적인 동작을 정리했고 공식 문서를 열어 확인하지는 않았습니다.
-- **편집기(vim) 조작수서**: 일반적인 사용법입니다. 환경에 따라 편집기가 다를 수 있습니다.
+- **편집기(vim) 조작순서**: 일반적인 사용법입니다. 환경에 따라 편집기가 다를 수 있습니다.
 - **시간 배분과 추천안**(네이밍, 커밋 타입, 리뷰 순환표, 시나리오 분담)은 제 제안이지 미션 요구사항이 아닙니다. 미션 요구사항과 충돌하면 미션이 우선입니다.
 - **출력 차이**: Git 버전이나 운영체제(특히 Windows 터미널)에 따라 안내 문구가 조금 다를 수 있습니다. 명령의 동작 원리는 같습니다.
 
