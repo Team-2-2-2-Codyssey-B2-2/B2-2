@@ -64,3 +64,66 @@
 ## 기록
 
 <!-- 위 템플릿을 복사해 여기에 추가하세요. -->
+
+## 충돌 기록 #1
+
+### 참여자
+- 해결: tlswltjq (GitHub 웹 에디터에서 충돌 해결, `8624041`)
+- 상대: NiceTry3675 (PR #8 작성자, 이 기록 작성)
+
+### 유형
+- [ ] 일반 충돌
+- [x] 비자명: 같은 hunk(인접 라인) 수정
+- [ ] 비자명: 파일 이동/이름 변경/삭제 vs 내용 수정
+
+### 상황(What happened)
+- 브랜치: `feature/string-utils`(PR #8) ← `main`(PR #10 병합 후 `3067dde`)
+- 파일: `README.md`
+- 원인: 두 PR이 모두 `main`(`6081252`)에서 출발해 README에 "유틸 함수 목록" 섹션을 각자 새로 추가함
+  - PR #8: 표 헤더 아래에 `string_utils` 행 + `### 검증 방법` 섹션 추가
+  - PR #10: 같은 표 헤더 아래에 `list_utils` 행 추가
+  - 표 헤더(`|---|---|---|---|`) 바로 다음 줄을 서로 다르게 채워 Git이 자동 병합할 수 없음
+- PR #10이 먼저 병합되면서 PR #8이 `CONFLICTING` 상태가 됨
+
+### 충돌 내용(Conflict markers)
+````txt
+| 파일 | 함수 | 설명 | 담당 |
+|---|---|---|---|
+<<<<<<< HEAD
+| [`src/string_utils.py`](src/string_utils.py) | `to_snake_case`, `truncate` | snake_case 변환, 최대 길이 말줄임 | NiceTry3675 |
+
+### 검증 방법
+
+```bash
+python3 -m doctest src/<파일명>.py -v
+```
+=======
+| [`src/list_utils.py`](src/list_utils.py) | `chunk`, `unique` | 고정 크기 분할, 순서 유지 중복 제거 | tlswltjq |
+>>>>>>> 3067dde
+````
+- `HEAD`(위쪽) = 현재 브랜치(`feature/string-utils`)의 내용, `3067dde`(아래쪽) = 병합해 들어오는 `main`의 내용
+- PR #10에는 `### 검증 방법` 섹션이 없어서, 행 1줄뿐 아니라 그 아래 섹션 전체가 충돌 구간에 포함됨
+
+### 해결 과정(How)
+- 선택한 전략: **keep both**. 두 행은 서로 다른 파일(유틸)을 설명하므로 둘 다 필요하고, `### 검증 방법` 섹션도 PR #8에서만 추가한 내용이라 그대로 유지
+- 실제 수행: PR #8 화면 → **Resolve conflicts**(웹 에디터) → 마커 3줄 삭제, `list_utils` 행을 `string_utils` 행 위로 배치 → **Mark as resolved** → **Commit merge**
+- 같은 충돌을 로컬에서 재현하는 명령
+  ```bash
+  git switch --detach 5213a3c      # PR #8 브랜치의 충돌 직전 커밋
+  git merge 3067dde                # PR #10 병합 직후의 main
+  # CONFLICT (content): Merge conflict in README.md
+  git status -s                    # UU README.md
+  # README.md에서 마커 제거, 두 행 모두 유지
+  git add README.md
+  git commit                       # 또는 확인만 했다면 git merge --abort
+  ```
+
+### 결과(Outcome)
+- 머지 커밋 `8624041`(Merge branch 'main' into feature/string-utils) 이후 PR #8이 `MERGEABLE`로 바뀌었고, tlswltjq 승인 후 `c82fb14`로 `main`에 병합됨
+- 최종 README 표에 `list_utils`, `string_utils` 두 행과 검증 방법 섹션이 모두 남음
+- 관련: PR #8, PR #10, 커밋 `8624041`, `c82fb14`
+
+### 배운 점(Learnings)
+- 여러 PR이 같은 파일의 **같은 위치에 새 섹션/행을 추가**하면 내용이 달라 거의 확실히 충돌한다. 공용 문서(README 표 등)는 첫 PR이 뼈대(헤더·섹션)를 만들고 병합된 뒤, 다른 PR은 최신 `main`을 받아 **마지막 행 아래에 추가**하면 충돌 범위가 1줄로 줄어든다.
+- 충돌 구간은 "바뀐 줄"만이 아니라 **양쪽이 서로 다르게 쓴 연속 구간 전체**다. 이번에는 `### 검증 방법` 섹션까지 마커 안에 들어가서, 마커를 지울 때 섹션을 함께 지우지 않도록 주의해야 했다.
+- 웹 에디터로 해결하면 편하지만 로컬 실행 검증을 할 수 없고, 이번처럼 파일 끝 개행이 사라질 수 있다. 코드 파일 충돌은 로컬에서 `git merge main` 후 테스트(doctest)까지 돌리고 push하는 것을 기본으로 한다.
