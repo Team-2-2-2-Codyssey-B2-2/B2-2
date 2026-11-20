@@ -47,7 +47,13 @@ def truncate(text: str, max_length: int, suffix: str = "...") -> str:
     Traceback (most recent call last):
         ...
     ValueError: max_length(2)는 suffix 길이(3) 이상이어야 합니다.
+    >>> truncate("Hello", -1)
+    Traceback (most recent call last):
+        ...
+    ValueError: max_length는 0 이상이어야 합니다.
     """
+    if max_length < 0:
+        raise ValueError("max_length는 0 이상이어야 합니다.")
     if len(text) <= max_length:
         return text
     if max_length < len(suffix):
