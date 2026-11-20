@@ -8,7 +8,7 @@
 import re
 
 _WORD_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
-_SEPARATORS = re.compile(r"[\s\-]+")
+_SEPARATORS = re.compile(r"[\s\-_]+")
 
 
 def to_snake_case(text: str) -> str:
@@ -22,6 +22,8 @@ def to_snake_case(text: str) -> str:
     'user_name_field'
     >>> to_snake_case("already_snake")
     'already_snake'
+    >>> to_snake_case("foo_-bar")
+    'foo_bar'
     >>> to_snake_case("")
     ''
     """
