@@ -19,7 +19,7 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 | 1. amend | `git commit --amend` | tlswltjq | ✅ |
 | 2. reset --soft | `git reset --soft HEAD~1` | NiceTry3675 | ✅ |
 | 3. revert | `git revert <commit>` | TBD | ⬜ |
-| 4. stash | `git stash` / `git stash pop` | TBD | ✅ |
+| 4. stash | `git stash` / `git stash pop` | ewisewjd | ✅ |
 
 ---
 
@@ -188,6 +188,11 @@ git switch -c feature/troubleshooting-stash origin/main
 # 임시 파일 생성 후 -u 옵션으로 stash
 git stash push -u -m "practice: stash untracked file for issue-16"
 
+# 6-1. stash 목록 확인
+git stash list
+# stash@{0}: On feature/troubleshooting-stash: practice: stash untracked file for issue-16
+# stash@{1}: On feature/add-dict-utils: backup: preserve study docs before issue-16
+
 # 7. 실습 항목 복원
 git stash pop 'stash@{0}'
 
@@ -209,6 +214,10 @@ git stash list
   - `git stash pop`은 복원과 동시에 해당 stash 항목을 제거하므로 대상 항목을 확인한 후 실행해야 함
   - 기존 작업을 보관한 stash와 실습용 stash가 함께 존재할 수 있으므로 `git stash list`로 구분해야 함
   - 기존 `docs/study/` 백업은 아직 복원하지 않았으므로 이후 원래 브랜치에서 복원해야 함
+  - 백업 stash 복원 시 주의:
+    - `feature/add-dict-utils`에 `main`을 병합한 이후에는 `docs/study/`가 Git 추적 파일로 들어왔으므로, 기존 untracked 백업 stash를 그대로 `pop`하면 파일이 이미 존재해 복원에 실패할 수 있음
+    - 복원 전에 `git stash show -p --include-untracked 'stash@{0}'`으로 백업 내용을 확인하고, 현재 파일과 비교해야 함
+    - 내용이 동일하면 해당 stash를 `git stash drop`으로 정리하고, 다르면 `git stash branch <새브랜치> 'stash@{0}'`으로 별도 브랜치에서 복원하는 방법을 고려
 
 ### 왜 이 방법을 선택했는가(Why)
 - 기존 작업을 완료하지 않은 상태에서 다른 브랜치로 이동해야 했으므로 임시 커밋 대신 `stash`를 선택함
