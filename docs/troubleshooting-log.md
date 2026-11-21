@@ -19,7 +19,7 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 | 1. amend | `git commit --amend` | tlswltjq | ✅ |
 | 2. reset --soft | `git reset --soft HEAD~1` | NiceTry3675 | ✅ |
 | 3. revert | `git revert <commit>` | TBD | ⬜ |
-| 4. stash | `git stash` / `git stash pop` | TBD | ⬜ |
+| 4. stash | `git stash` / `git stash pop` | ewisewjd | ✅ |
 
 ---
 
@@ -150,26 +150,77 @@ git push -u origin feature/<name>-revert-<topic>
 
 ---
 
-## 시나리오 4: stash / stash pop (작업 보관 후 전환)
+## 시나리오 4: stash / stash pop (작업 임시 보관 및 복원)
 
 ### 참여자
-- <name> (역할)
+- ewisewjd (수행, 기록)
 
 ### 상황
-- 
+- 브랜치 `feature/add-dict-utils`에서 기존 학습 자료인 `docs/study/`를 작업 중인 상태
+- Issue #16의 stash 실습을 위해 별도 브랜치 `feature/troubleshooting-stash`를 생성해야 하는 상황
+- 기존 작업을 커밋하거나 다른 브랜치로 이동하면서 유실하지 않도록 임시 보관하기로 함
+- `docs/study/`는 Git이 추적하지 않는 파일이므로 `-u` 옵션을 사용해야 하는 상황
 
 ### 시도한 명령/절차
 ```bash
-git stash push -m "<보관 이유>"
-git switch <other-branch>
-# 다른 작업 수행
-git switch <original-branch>
-git stash pop
+# 1. 기존 작업 상태 확인
+git status
+# Untracked files:
+#   docs/study/
+
+# 2. 기존 작업을 미추적 파일까지 포함해 임시 보관
+git stash push -u -m "backup: preserve study docs before issue-16"
+# Saved working directory and index state ...
+
+# 3. 작업 디렉터리 확인
+git status
+# nothing to commit, working tree clean
+
+# 4. stash 목록 확인
+git stash list
+# stash@{0}: On feature/add-dict-utils: backup: preserve study docs before issue-16
+
+# 5. 최신 원격 main을 기준으로 작업 브랜치 생성
+git fetch origin
+git switch -c feature/troubleshooting-stash origin/main
+
+# 6. 별도 브랜치에서 stash 동작 실습
+# 임시 파일 생성 후 -u 옵션으로 stash
+git stash push -u -m "practice: stash untracked file for issue-16"
+
+# 6-1. stash 목록 확인
+git stash list
+# stash@{0}: On feature/troubleshooting-stash: practice: stash untracked file for issue-16
+# stash@{1}: On feature/add-dict-utils: backup: preserve study docs before issue-16
+
+# 7. 실습 항목 복원
+git stash pop 'stash@{0}'
+
+# 8. 기존 백업 stash가 남아 있는지 확인
+git stash list
+# stash@{0}: On feature/add-dict-utils: backup: preserve study docs before issue-16
 ```
 
 ### 결과
-- 
-- 주의할 점: 
+- 기존 `feature/add-dict-utils` 브랜치의 `docs/study/`를 `git stash push -u`로 임시 보관함
+- stash 이후 작업 디렉터리가 clean 상태가 된 것을 확인함
+- 기존 작업을 보존한 상태로 최신 `origin/main`을 기준으로 `feature/troubleshooting-stash` 브랜치를 생성함
+- 별도의 임시 파일을 이용해 untracked 파일도 stash 대상에 포함되는 것을 확인함
+- `git stash pop`으로 실습용 파일을 복원하고 해당 stash 항목이 제거되는 것을 확인함
+- 기존 `docs/study/` 백업 stash는 유지되어 있음을 확인함
+- 실습용 임시 파일을 삭제한 후 작업 디렉터리가 clean 상태임을 확인함
+- 주의할 점:
+  - 기본 `git stash`는 untracked 파일을 포함하지 않으므로 `-u` 옵션을 사용해야 함
+  - `git stash pop`은 복원과 동시에 해당 stash 항목을 제거하므로 대상 항목을 확인한 후 실행해야 함
+  - 기존 작업을 보관한 stash와 실습용 stash가 함께 존재할 수 있으므로 `git stash list`로 구분해야 함
+  - 기존 `docs/study/` 백업은 아직 복원하지 않았으므로 이후 원래 브랜치에서 복원해야 함
+  - 백업 stash 복원 시 주의:
+    - `feature/add-dict-utils`에 `main`을 병합한 이후에는 `docs/study/`가 Git 추적 파일로 들어왔으므로, 기존 untracked 백업 stash를 그대로 `pop`하면 파일이 이미 존재해 복원에 실패할 수 있음
+    - 복원 전에 `git stash show -p --include-untracked 'stash@{0}'`으로 백업 내용을 확인하고, 현재 파일과 비교해야 함
+    - 내용이 동일하면 해당 stash를 `git stash drop`으로 정리하고, 다르면 `git stash branch <새브랜치> 'stash@{0}'`으로 별도 브랜치에서 복원하는 방법을 고려
 
 ### 왜 이 방법을 선택했는가(Why)
-- 임시 커밋 대신 `stash`를 쓴 이유
+- 기존 작업을 완료하지 않은 상태에서 다른 브랜치로 이동해야 했으므로 임시 커밋 대신 `stash`를 선택함
+- `docs/study/`가 untracked 상태였기 때문에 일반 `git stash`가 아닌 `git stash push -u`를 사용함
+- 별도의 백업 커밋을 만들지 않고 작업 디렉터리를 clean 상태로 만들어 다른 작업을 진행할 수 있음
+- `git stash pop`은 복원과 동시에 해당 stash 항목을 제거하므로 복원 완료 후 불필요한 stash가 남지 않음
