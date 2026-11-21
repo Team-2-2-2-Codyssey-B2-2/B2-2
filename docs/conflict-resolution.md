@@ -168,10 +168,11 @@ python3 -m doctest src/<파일명>.py -v
   ```
 
 ### 결과(Outcome)
-- 충돌 재현을 통해 `README.md`에서 `dict_utils.py` 행과 `main`의 변경 사이에 발생한 충돌을 확인함.
-- 최종 병합에서는 `dict_utils.py` 행을 유지하고 충돌 마커를 제거함.
-- 병합 커밋: `ba1e7b5`
+- `ba1e7b5`에서 `main` 병합 과정의 README 충돌이 해결됨.
+- 최종 README에는 `list_utils.py`, `string_utils.py`, `dict_utils.py` 행과 검증 방법 섹션이 모두 유지됨.
+- `git show --cc ba1e7b5 -- README.md`와 `git show ba1e7b5:README.md`로 실제 병합 결과를 확인함.
 - 관련 PR: [PR #13](https://github.com/Team-2-2-2-Codyssey-B2-2/B2-2/pull/13)
+- 충돌 재현 과정은 `git merge --abort`로 종료했으며, 실제 병합 커밋과 구분하여 기록함.
 
 ### 배운 점(Learnings)
 - README처럼 여러 브랜치에서 공통으로 수정하는 파일은 작은 행 추가만으로도 충돌이 발생할 수 있음.
