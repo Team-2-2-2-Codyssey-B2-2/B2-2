@@ -18,7 +18,7 @@ Git 트러블슈팅 4종 시나리오를 실제로 수행하고 기록합니다.
 |---|---|---|---|
 | 1. amend | `git commit --amend` | tlswltjq | ✅ |
 | 2. reset --soft | `git reset --soft HEAD~1` | NiceTry3675 | ✅ |
-| 3. revert | `git revert <commit>` | TBD | ⬜ |
+| 3. revert | `git revert <commit>` | NiceTry3675 | ✅ |
 | 4. stash | `git stash` / `git stash pop` | ewisewjd | ✅ |
 
 ---
@@ -128,25 +128,48 @@ c82fb14 HEAD@{3}: checkout: moving from main to feature/conflict-log-reset-soft
 ## 시나리오 3: revert (원격에 push된 커밋 취소)
 
 ### 참여자
-- <name> (역할)
+- NiceTry3675 (수행, 기록)
 
 ### 상황
-- 
+- 브랜치 `feature/submission-index`(Issue #23)에서 `git log --oneline --graph --all` 결과를 `evidence/git-log.txt`로 저장해 커밋(`032fb75`)하고 **원격에 push까지 완료**함
+- push 직후, 아직 PR #19·#21·이 PR 등이 병합되지 않아 그래프가 **최종 히스토리를 반영하지 못한 스냅샷**이라는 것을 발견. 증빙은 모든 PR 병합 후 마지막에 만들어야 함
+- 이미 원격(공유 저장소)에 올라간 커밋이라 팀원이 fetch했거나 PR 화면에서 봤을 수 있는 상태
 
 ### 시도한 명령/절차
 ```bash
-git switch -c feature/<name>-revert-<topic> main
-git revert <commit>
-git push -u origin feature/<name>-revert-<topic>
-# PR 생성 → 리뷰 → 병합
+$ git log --oneline -2 origin/feature/submission-index
+032fb75 docs: add git log graph evidence                 # 원격에 이미 있음
+50411d7 Merge pull request #13 from Team-2-2-2-Codyssey-B2-2/feature/add-dict-utils
+
+$ git revert --no-edit 032fb75
+[feature/submission-index f9aeff0] Revert "docs: add git log graph evidence"
+ 1 file changed, 66 deletions(-)
+ delete mode 100644 evidence/git-log.txt
+
+$ git log --oneline -3
+f9aeff0 Revert "docs: add git log graph evidence"        # 되돌리는 새 커밋
+032fb75 docs: add git log graph evidence                 # 원래 커밋은 그대로 남음
+50411d7 Merge pull request #13 from Team-2-2-2-Codyssey-B2-2/feature/add-dict-utils
+
+$ git push
+To https://github.com/Team-2-2-2-Codyssey-B2-2/B2-2.git
+   032fb75..f9aeff0  feature/submission-index -> feature/submission-index
 ```
 
 ### 결과
-- 
-- 관련 PR: <url>
+- `032fb75`의 변경(파일 66줄 추가)을 정반대로 적용한 새 커밋 `f9aeff0`이 생겨 `evidence/git-log.txt`가 제거됨
+- 원래 커밋을 지우지 않고 **위에 쌓았기 때문에** push가 `032fb75..f9aeff0` 일반 fast-forward로 끝남(force push 불필요)
+- "무엇을, 왜 되돌렸는지"가 히스토리에 그대로 남음. 같은 브랜치를 이미 받은 사람도 `git pull`만 하면 됨
+- 관련: Issue #23, 이 시나리오를 수행한 PR(`feature/submission-index`)
+- 주의할 점
+  - `main`(보호 브랜치)에 병합된 커밋을 되돌릴 때는 `main`에서 직접 하지 않고 `feature/...` 브랜치에서 revert한 뒤 **PR로 병합**해야 함(직접 push 금지)
+  - PR 병합으로 생긴 **merge commit**을 되돌릴 때는 기준 부모를 지정해야 함: `git revert -m 1 <merge-commit>` (`-m` 없이 실행하면 `is a merge but no -m option was given` 오류)
+  - `--no-edit`은 Git 기본 메시지(`Revert "<원래 메시지>"`)를 그대로 사용함. 원래 커밋 메시지가 함께 들어가 대상이 드러나므로 팀 컨벤션의 "의미 없는 메시지"에는 해당하지 않지만, 되돌린 **이유**를 남기고 싶다면 `--no-edit` 없이 실행해 본문에 적는 것이 더 좋음
 
 ### 왜 이 방법을 선택했는가(Why)
-- `reset` 대신 `revert`를 선택한 이유
+- **reset이 아닌 이유**: `git reset --hard HEAD~1` 후 push하려면 원격보다 뒤처진 상태라 `--force`가 필요함. 이미 공유된 커밋을 지우면 그 커밋을 받은 팀원의 히스토리와 갈라지고, PR에 달린 코멘트·커밋 링크도 사라질 수 있음
+- **revert의 장점**: 히스토리를 바꾸지 않고 "되돌림" 자체를 기록으로 남기므로 협업 중인 브랜치에서도 안전함. 실수(이른 증빙 커밋)와 그 처리 과정이 모두 추적 가능
+- 비교: push 전이었다면 `git reset --soft HEAD~1`(시나리오 2)로 조용히 정리해도 됐지만, **push 이후**라는 점이 판단 기준
 
 ---
 
