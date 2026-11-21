@@ -133,7 +133,7 @@ python3 -m doctest src/<파일명>.py -v
 
 ### 참여자
 - 해결: ewisewjd (로컬에서 충돌 재현, 확인)
-- 상대: main (`a3de3df` 변경 유입)
+- 상대: tlswltjq, NiceTry3675 (`main`에 먼저 병합된 PR #10 `3067dde`, PR #8 `c82fb14`의 README 변경)
 
 ### 유형
 - [x] 일반 충돌
@@ -159,13 +159,15 @@ python3 -m doctest src/<파일명>.py -v
 
 ### 해결 과정(How)
 - 선택한 전략: **choose one**. 현재 브랜치(`feature/add-dict-utils`)에서 추가한 `dict_utils.py` 행을 유지하고, 병합해 들어오는 `main` 쪽에는 해당 구간에 별도로 유지할 내용이 없으므로 충돌 마커를 제거함.
-- 실제 수행한 명령:
+- 재현 명령(로컬):
   ```bash
   git switch --detach 5210e3f
   git merge a3de3df
   git diff -- README.md
   git merge --abort
   ```
+- 실제 해결 방법: PR #13의 GitHub 웹 에디터에서 `Resolve conflicts` 선택 → 충돌 마커 제거 → `Mark as resolved` → `Commit merge` 진행.
+- 해결: ewisewjd (PR #13 웹 에디터에서 해결 → ba1e7b5, 이후 로컬에서 재현·확인)
 
 ### 결과(Outcome)
 - `ba1e7b5`에서 `main` 병합 과정의 README 충돌이 해결됨.
